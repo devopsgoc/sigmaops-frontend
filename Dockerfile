@@ -10,14 +10,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Directorio de trabajo
 WORKDIR /app
 
-# Instalar dependencias del sistema para mysqlclient
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    default-libmysqlclient-dev \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copiar requirements y instalar dependencias Python
+# (PyMySQL es Python puro, no requiere compilación)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
