@@ -7,6 +7,10 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+# Usar PyMySQL como backend de MySQL
+import pymysql
+pymysql.install_as_MySQLdb()
+
 # Cargar variables de entorno
 load_dotenv()
 
@@ -116,4 +120,5 @@ if not DEBUG:
     X_FRAME_OPTIONS = 'DENY'
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+
 
