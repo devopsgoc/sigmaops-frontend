@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  sigmaops:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sigmaops-frontend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=${DB_NAME:-claro_sigmaops}
+      - DB_USER=${DB_USER:-clarosigma}
+      - DB_PASSWORD=${DB_PASSWORD:-test123}
+      - DB_HOST=${DB_HOST:-10.68.12.31}
+      - DB_PORT=${DB_PORT:-3306}
+      - DEBUG=${DEBUG:-False}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    networks:
+      - sigmaops-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  static_volume:
+  media_volume:
+
+networks:
+  sigmaops-network:
+    driver: bridge

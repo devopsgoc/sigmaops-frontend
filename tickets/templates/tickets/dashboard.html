@@ -1,0 +1,126 @@
+{% extends 'tickets/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-total">🎫</div>
+            <div class="kpi-content">
+                <span class="kpi-value">{{ total_tickets }}</span>
+                <span class="kpi-label">Total Tickets</span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-pending">⏳</div>
+            <div class="kpi-content">
+                <span class="kpi-value">{{ tickets_pendientes }}</span>
+                <span class="kpi-label">Pendientes</span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-progress">🔄</div>
+            <div class="kpi-content">
+                <span class="kpi-value">{{ tickets_en_proceso }}</span>
+                <span class="kpi-label">En Proceso</span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon kpi-closed">✅</div>
+            <div class="kpi-content">
+                <span class="kpi-value">{{ tickets_cerrados }}</span>
+                <span class="kpi-label">Cerrados</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="alert-section">
+        <div class="alert-card critical">
+            <span class="alert-count">{{ tickets_criticos }}</span>
+            <span class="alert-label">Tickets Críticos</span>
+        </div>
+        <div class="alert-card high">
+            <span class="alert-count">{{ tickets_alta }}</span>
+            <span class="alert-label">Prioridad Alta</span>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Por Categoría -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Por Categoría</h3>
+            </div>
+            <div class="card-body">
+                <div class="stat-list">
+                    {% for cat in tickets_por_categoria %}
+                    <div class="stat-item">
+                        <span class="stat-name">{{ cat.nombre }}</span>
+                        <span class="stat-value">{{ cat.total }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Por Data Center -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Por Data Center</h3>
+            </div>
+            <div class="card-body">
+                <div class="stat-list">
+                    {% for dc in tickets_por_dc %}
+                    <div class="stat-item">
+                        <span class="stat-name">{{ dc.nombre }}</span>
+                        <span class="stat-value">{{ dc.total }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimos Tickets -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Últimos Tickets</h3>
+            <a href="{% url 'ticket_list' %}" class="btn btn-sm">Ver todos</a>
+        </div>
+        <div class="card-body">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Título</th>
+                        <th>Estado</th>
+                        <th>Prioridad</th>
+                        <th>Data Center</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in ultimos_tickets %}
+                    <tr>
+                        <td><a href="{% url 'ticket_detail' ticket.pk %}" class="link">{{ ticket.codigo }}</a></td>
+                        <td class="truncate">{{ ticket.titulo|truncatechars:50 }}</td>
+                        <td><span class="badge badge-estado">{{ ticket.estado.nombre }}</span></td>
+                        <td><span class="badge {{ ticket.prioridad_badge }}">{{ ticket.prioridad }}</span></td>
+                        <td>{{ ticket.dc.nombre|default:"-" }}</td>
+                        <td>{{ ticket.fecha_inicio|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No hay tickets registrados</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

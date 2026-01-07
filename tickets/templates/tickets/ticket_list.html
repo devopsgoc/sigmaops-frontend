@@ -1,0 +1,115 @@
+{% extends 'tickets/base.html' %}
+
+{% block title %}Tickets{% endblock %}
+{% block page_title %}Listado de Tickets{% endblock %}
+
+{% block content %}
+<div class="ticket-list-page">
+    <!-- Filtros -->
+    <div class="filters-bar">
+        <form method="get" class="filter-form">
+            <div class="filter-group">
+                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar por código o título..." class="form-input search-input">
+            </div>
+            <div class="filter-group">
+                <select name="estado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    {% for estado in estados %}
+                    <option value="{{ estado.id }}" {% if request.GET.estado == estado.id|stringformat:"s" %}selected{% endif %}>{{ estado.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="categoria" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.id }}" {% if request.GET.categoria == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="prioridad" class="form-select">
+                    <option value="">Todas las prioridades</option>
+                    {% for p in prioridades %}
+                    <option value="{{ p }}" {% if request.GET.prioridad == p %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="dc" class="form-select">
+                    <option value="">Todos los DC</option>
+                    {% for dc in data_centers %}
+                    <option value="{{ dc.id }}" {% if request.GET.dc == dc.id|stringformat:"s" %}selected{% endif %}>{{ dc.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            <a href="{% url 'ticket_list' %}" class="btn btn-ghost">Limpiar</a>
+        </form>
+    </div>
+
+    <!-- Tabla de tickets -->
+    <div class="card">
+        <div class="card-header">
+            <h3>{{ tickets|length }} ticket{% if tickets|length != 1 %}s{% endif %} encontrado{% if tickets|length != 1 %}s{% endif %}</h3>
+            <a href="{% url 'ticket_create' %}" class="btn btn-primary">+ Nuevo Ticket</a>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Título</th>
+                        <th>Categoría</th>
+                        <th>Estado</th>
+                        <th>Prioridad</th>
+                        <th>DC</th>
+                        <th>Proveedor</th>
+                        <th>Asignado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                    <tr>
+                        <td><a href="{% url 'ticket_detail' ticket.pk %}" class="link">{{ ticket.codigo }}</a></td>
+                        <td class="truncate" title="{{ ticket.titulo }}">{{ ticket.titulo|truncatechars:40 }}</td>
+                        <td>{{ ticket.categoria.nombre|default:"-" }}</td>
+                        <td><span class="badge badge-estado">{{ ticket.estado.nombre }}</span></td>
+                        <td><span class="badge {{ ticket.prioridad_badge }}">{{ ticket.prioridad }}</span></td>
+                        <td>{{ ticket.dc.nombre|default:"-" }}</td>
+                        <td>{{ ticket.proveedor.nombre|default:"-" }}</td>
+                        <td>{{ ticket.usuario_asignado.nombre|truncatechars:20|default:"-" }}</td>
+                        <td>{{ ticket.fecha_inicio|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="actions">
+                                <a href="{% url 'ticket_detail' ticket.pk %}" class="btn-icon" title="Ver">👁️</a>
+                                <a href="{% url 'ticket_update' ticket.pk %}" class="btn-icon" title="Editar">✏️</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center">No se encontraron tickets</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm">« Anterior</a>
+        {% endif %}
+        <span class="page-info">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm">Siguiente »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

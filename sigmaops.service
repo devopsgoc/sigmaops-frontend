@@ -1,0 +1,17 @@
+[Unit]
+Description=SigmaOps - Sistema de Gestión de Tickets
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/sigmaops
+Environment="PATH=/opt/sigmaops/venv/bin"
+EnvironmentFile=/opt/sigmaops/.env
+ExecStart=/opt/sigmaops/venv/bin/gunicorn --bind 0.0.0.0:8000 --workers 3 --access-logfile /var/log/sigmaops/access.log --error-logfile /var/log/sigmaops/error.log sigmaops.wsgi:application
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

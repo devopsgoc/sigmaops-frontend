@@ -1,0 +1,125 @@
+{% extends 'tickets/base.html' %}
+
+{% block title %}{{ ticket.codigo }}{% endblock %}
+{% block page_title %}Detalle del Ticket{% endblock %}
+
+{% block content %}
+<div class="ticket-detail-page">
+    <!-- Header del ticket -->
+    <div class="ticket-header">
+        <div class="ticket-header-info">
+            <span class="ticket-code">{{ ticket.codigo }}</span>
+            <span class="badge {{ ticket.prioridad_badge }}">{{ ticket.prioridad }}</span>
+            <span class="badge badge-estado">{{ ticket.estado.nombre }}</span>
+        </div>
+        <div class="ticket-header-actions">
+            <a href="{% url 'ticket_update' ticket.pk %}" class="btn btn-primary">Editar</a>
+            <a href="{% url 'ticket_list' %}" class="btn btn-ghost">Volver</a>
+        </div>
+    </div>
+
+    <h2 class="ticket-title">{{ ticket.titulo }}</h2>
+
+    <div class="ticket-detail-grid">
+        <!-- Info principal -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Información del Ticket</h3>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Categoría</label>
+                        <span>{{ ticket.categoria.nombre|default:"-" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Proveedor</label>
+                        <span>{{ ticket.proveedor.nombre|default:"-" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Elemento</label>
+                        <span>{{ ticket.elemento.nombre|default:"-" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Data Center</label>
+                        <span>{{ ticket.dc.nombre|default:"-" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Fecha Inicio</label>
+                        <span>{{ ticket.fecha_inicio|date:"d/m/Y"|default:"-" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Última Actualización</label>
+                        <span>{{ ticket.fecha_actualizacion|date:"d/m/Y"|default:"-" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Fecha Cierre</label>
+                        <span>{{ ticket.fecha_cierre|date:"d/m/Y"|default:"-" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Duración</label>
+                        <span>{% if ticket.duracion_dias %}{{ ticket.duracion_dias }} días{% else %}-{% endif %}</span>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <label>Descripción</label>
+                    <div class="description-box">{{ ticket.descripcion|default:"Sin descripción"|linebreaks }}</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Creado por</label>
+                        <span>{{ ticket.usuario_creador.nombre|default:"-" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Asignado a</label>
+                        <span>{{ ticket.usuario_asignado.nombre|default:"-" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Observaciones ({{ observaciones|length }})</h3>
+            </div>
+            <div class="card-body">
+                <!-- Formulario nueva observación -->
+                <form method="post" action="{% url 'agregar_observacion' ticket.pk %}" class="observation-form">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group flex-grow">
+                            {{ form_observacion.comentario }}
+                        </div>
+                        <div class="form-group">
+                            {{ form_observacion.tipo }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Agregar</button>
+                    </div>
+                </form>
+
+                <!-- Timeline de observaciones -->
+                <div class="timeline">
+                    {% for obs in observaciones %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker {{ obs.tipo|lower }}"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <span class="badge badge-sm">{{ obs.tipo }}</span>
+                                <span class="timeline-user">{{ obs.usuario.nombre|default:"Sistema" }}</span>
+                                <span class="timeline-date">{{ obs.fecha|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            <div class="timeline-body">{{ obs.comentario|linebreaks }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No hay observaciones registradas.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

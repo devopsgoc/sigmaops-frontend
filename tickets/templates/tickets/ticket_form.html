@@ -1,0 +1,100 @@
+{% extends 'tickets/base.html' %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Ticket{% endblock %}
+{% block page_title %}{% if form.instance.pk %}Editar Ticket{% else %}Nuevo Ticket{% endif %}{% endblock %}
+
+{% block content %}
+<div class="ticket-form-page">
+    <div class="card">
+        <div class="card-header">
+            <h3>{% if form.instance.pk %}Editando: {{ form.instance.codigo }}{% else %}Crear Nuevo Ticket{% endif %}
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="post" class="ticket-form">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                <div class="alert alert-error">
+                    <strong>Por favor corrija los errores:</strong>
+                    {{ form.errors }}
+                </div>
+                {% endif %}
+
+                <div class="form-section">
+                    <h4>Información Principal</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="id_codigo">Código *</label>
+                            {{ form.codigo }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_prioridad">Prioridad</label>
+                            {{ form.prioridad }}
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="id_titulo">Título *</label>
+                            {{ form.titulo }}
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="id_descripcion">Descripción</label>
+                            {{ form.descripcion }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Clasificación</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="id_estado">Estado *</label>
+                            {{ form.estado }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_categoria">Categoría</label>
+                            {{ form.categoria }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_proveedor">Proveedor</label>
+                            {{ form.proveedor }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_elemento">Elemento</label>
+                            {{ form.elemento }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_dc">Data Center</label>
+                            {{ form.dc }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_usuario_asignado">Asignado a</label>
+                            {{ form.usuario_asignado }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Fechas</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="id_fecha_inicio">Fecha Inicio</label>
+                            {{ form.fecha_inicio }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_fecha_cierre">Fecha Cierre</label>
+                            {{ form.fecha_cierre }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        {% if form.instance.pk %}Guardar Cambios{% else %}Crear Ticket{% endif %}
+                    </button>
+                    <a href="{% url 'ticket_list' %}" class="btn btn-ghost btn-lg">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
