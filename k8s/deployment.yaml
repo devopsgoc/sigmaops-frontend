@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sigmaops
+  labels:
+    app: sigmaops
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sigmaops
+  template:
+    metadata:
+      labels:
+        app: sigmaops
+    spec:
+      containers:
+        - name: sigmaops
+          image: sigmaops-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: sigmaops-config
+            - secretRef:
+                name: sigmaops-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: static-files
+              mountPath: /app/staticfiles
+      volumes:
+        - name: static-files
+          emptyDir: {}

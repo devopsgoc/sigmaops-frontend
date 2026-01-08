@@ -4,15 +4,18 @@ Vistas del sistema de tickets
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.db.models import Count, Q
 from django.contrib import messages
 from .models import Ticket, Observacion, Estado, Categoria, Proveedor, DataCenter, Elemento, Usuario
 from .forms import TicketForm, ObservacionForm
+from .permissions import PuedeCrearMixin, PuedeEditarMixin
 
 
+@login_required
 def dashboard(request):
-    """Dashboard principal con estadísticas"""
+    """Dashboard principal con estadísticas y filtros"""
     # Contadores generales
     total_tickets = Ticket.objects.count()
     tickets_pendientes = Ticket.objects.filter(estado__nombre='Pendiente').count()
@@ -26,17 +29,36 @@ def dashboard(request):
     # Tickets por categoría
     tickets_por_categoria = Categoria.objects.annotate(
         total=Count('ticket')
-    ).values('nombre', 'total')
+    ).filter(total__gt=0).values('nombre', 'total')
     
     # Tickets por data center
     tickets_por_dc = DataCenter.objects.annotate(
         total=Count('ticket')
-    ).values('nombre', 'total')
+    ).filter(total__gt=0).values('nombre', 'total')
     
-    # Últimos 10 tickets
-    ultimos_tickets = Ticket.objects.select_related(
+    # Filtrar tickets según el parámetro GET
+    filtro = request.GET.get('filtro', 'todos')
+    valor = request.GET.get('valor', '')
+    tickets_filtrados = Ticket.objects.select_related(
         'estado', 'categoria', 'proveedor', 'dc'
-    ).order_by('-fecha_inicio')[:10]
+    )
+    
+    if filtro == 'pendiente':
+        tickets_filtrados = tickets_filtrados.filter(estado__nombre='Pendiente')
+    elif filtro == 'proceso':
+        tickets_filtrados = tickets_filtrados.filter(estado__nombre='En Proceso')
+    elif filtro == 'cerrado':
+        tickets_filtrados = tickets_filtrados.filter(estado__nombre='Cerrado')
+    elif filtro == 'critico':
+        tickets_filtrados = tickets_filtrados.filter(prioridad='Crítica')
+    elif filtro == 'alta':
+        tickets_filtrados = tickets_filtrados.filter(prioridad='Alta')
+    elif filtro == 'categoria' and valor:
+        tickets_filtrados = tickets_filtrados.filter(categoria__nombre=valor)
+    elif filtro == 'dc' and valor:
+        tickets_filtrados = tickets_filtrados.filter(dc__nombre=valor)
+    
+    tickets_filtrados = tickets_filtrados.order_by('-fecha_inicio')
     
     context = {
         'total_tickets': total_tickets,
@@ -47,12 +69,12 @@ def dashboard(request):
         'tickets_alta': tickets_alta,
         'tickets_por_categoria': tickets_por_categoria,
         'tickets_por_dc': tickets_por_dc,
-        'ultimos_tickets': ultimos_tickets,
+        'tickets_filtrados': tickets_filtrados,
     }
     return render(request, 'tickets/dashboard.html', context)
 
 
-class TicketListView(ListView):
+class TicketListView(LoginRequiredMixin, ListView):
     """Listado de tickets con filtros"""
     model = Ticket
     template_name = 'tickets/ticket_list.html'
@@ -97,7 +119,7 @@ class TicketListView(ListView):
         return context
 
 
-class TicketDetailView(DetailView):
+class TicketDetailView(LoginRequiredMixin, DetailView):
     """Detalle de un ticket con observaciones"""
     model = Ticket
     template_name = 'tickets/ticket_detail.html'
@@ -116,8 +138,8 @@ class TicketDetailView(DetailView):
         return context
 
 
-class TicketCreateView(CreateView):
-    """Crear nuevo ticket"""
+class TicketCreateView(PuedeCrearMixin, LoginRequiredMixin, CreateView):
+    """Crear nuevo ticket - Requiere rol: Super Admin, Administrador, Operador"""
     model = Ticket
     form_class = TicketForm
     template_name = 'tickets/ticket_form.html'
@@ -127,8 +149,8 @@ class TicketCreateView(CreateView):
         return self.object.get_absolute_url()
 
 
-class TicketUpdateView(UpdateView):
-    """Editar ticket existente"""
+class TicketUpdateView(PuedeEditarMixin, LoginRequiredMixin, UpdateView):
+    """Editar ticket existente - Requiere rol: Super Admin, Administrador, Operador"""
     model = Ticket
     form_class = TicketForm
     template_name = 'tickets/ticket_form.html'

@@ -1,0 +1,18 @@
+{% extends 'tickets/base.html' %}
+
+{% block title %}Cerrar Sesión{% endblock %}
+{% block page_title %}Cerrar Sesión{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-card" style="text-align: center;">
+        <h2>¿Cerrar Sesión?</h2>
+        <p style="color: var(--text-secondary); margin: 1rem 0;">¿Estás seguro que deseas salir de tu cuenta?</p>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-lg" style="margin-right: 1rem;">Sí, Cerrar Sesión</button>
+            <a href="{% url 'dashboard' %}" class="btn btn-ghost btn-lg">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

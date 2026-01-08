@@ -8,9 +8,9 @@
     <div class="login-card">
         <div class="login-header">
             <div class="logo-large">
-                <span class="logo-icon">σ</span>
+                <img src="/static/img/logo.png" alt="Logo" style="height: 60px; width: auto;">
             </div>
-            <h2>SigmaOps</h2>
+            <h2>ClaroVTR</h2>
             <p>Sistema de Tickets de Infraestructura</p>
         </div>
 
@@ -31,8 +31,11 @@
 
             <div class="form-group">
                 <label for="id_password">Contraseña</label>
-                <input type="password" name="password" id="id_password" class="form-input"
-                    placeholder="Ingrese su contraseña" required>
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="id_password" class="form-input"
+                        placeholder="Ingrese su contraseña" required>
+                    <span class="toggle-password" onclick="togglePassword()">👁️</span>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary btn-lg btn-block">
@@ -41,4 +44,42 @@
         </form>
     </div>
 </div>
+
+<style>
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-wrapper .form-input {
+        padding-right: 40px;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        user-select: none;
+    }
+
+    .toggle-password:hover {
+        transform: scale(1.1);
+    }
+</style>
+
+<script>
+    function togglePassword() {
+        const input = document.getElementById('id_password');
+        const icon = document.querySelector('.toggle-password');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            icon.textContent = '👁️';
+        }
+    }
+</script>
 {% endblock %}

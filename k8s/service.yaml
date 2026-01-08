@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sigmaops-service
+  labels:
+    app: sigmaops
+spec:
+  type: ClusterIP
+  selector:
+    app: sigmaops
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+      protocol: TCP
+---
+# Opcional: NodePort para acceso externo sin Ingress
+apiVersion: v1
+kind: Service
+metadata:
+  name: sigmaops-nodeport
+  labels:
+    app: sigmaops
+spec:
+  type: NodePort
+  selector:
+    app: sigmaops
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+      nodePort: 30080
+      protocol: TCP

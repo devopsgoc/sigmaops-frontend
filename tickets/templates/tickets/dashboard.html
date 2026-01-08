@@ -5,48 +5,49 @@
 
 {% block content %}
 <div class="dashboard">
-    <!-- KPI Cards -->
+    <!-- KPI Cards - Clickeables para filtrar -->
     <div class="kpi-grid">
-        <div class="kpi-card">
+        <a href="?filtro=todos"
+            class="kpi-card {% if request.GET.filtro == 'todos' or not request.GET.filtro %}active{% endif %}">
             <div class="kpi-icon kpi-total">🎫</div>
             <div class="kpi-content">
                 <span class="kpi-value">{{ total_tickets }}</span>
                 <span class="kpi-label">Total Tickets</span>
             </div>
-        </div>
-        <div class="kpi-card">
+        </a>
+        <a href="?filtro=pendiente" class="kpi-card {% if request.GET.filtro == 'pendiente' %}active{% endif %}">
             <div class="kpi-icon kpi-pending">⏳</div>
             <div class="kpi-content">
                 <span class="kpi-value">{{ tickets_pendientes }}</span>
                 <span class="kpi-label">Pendientes</span>
             </div>
-        </div>
-        <div class="kpi-card">
+        </a>
+        <a href="?filtro=proceso" class="kpi-card {% if request.GET.filtro == 'proceso' %}active{% endif %}">
             <div class="kpi-icon kpi-progress">🔄</div>
             <div class="kpi-content">
                 <span class="kpi-value">{{ tickets_en_proceso }}</span>
                 <span class="kpi-label">En Proceso</span>
             </div>
-        </div>
-        <div class="kpi-card">
+        </a>
+        <a href="?filtro=cerrado" class="kpi-card {% if request.GET.filtro == 'cerrado' %}active{% endif %}">
             <div class="kpi-icon kpi-closed">✅</div>
             <div class="kpi-content">
                 <span class="kpi-value">{{ tickets_cerrados }}</span>
                 <span class="kpi-label">Cerrados</span>
             </div>
-        </div>
+        </a>
     </div>
 
     <!-- Alertas -->
     <div class="alert-section">
-        <div class="alert-card critical">
+        <a href="?filtro=critico" class="alert-card critical {% if request.GET.filtro == 'critico' %}active{% endif %}">
             <span class="alert-count">{{ tickets_criticos }}</span>
             <span class="alert-label">Tickets Críticos</span>
-        </div>
-        <div class="alert-card high">
+        </a>
+        <a href="?filtro=alta" class="alert-card high {% if request.GET.filtro == 'alta' %}active{% endif %}">
             <span class="alert-count">{{ tickets_alta }}</span>
             <span class="alert-label">Prioridad Alta</span>
-        </div>
+        </a>
     </div>
 
     <div class="dashboard-grid">
@@ -58,10 +59,11 @@
             <div class="card-body">
                 <div class="stat-list">
                     {% for cat in tickets_por_categoria %}
-                    <div class="stat-item">
+                    <a href="?filtro=categoria&valor={{ cat.nombre }}"
+                        class="stat-item clickable {% if request.GET.filtro == 'categoria' and request.GET.valor == cat.nombre %}active{% endif %}">
                         <span class="stat-name">{{ cat.nombre }}</span>
                         <span class="stat-value">{{ cat.total }}</span>
-                    </div>
+                    </a>
                     {% endfor %}
                 </div>
             </div>
@@ -75,52 +77,264 @@
             <div class="card-body">
                 <div class="stat-list">
                     {% for dc in tickets_por_dc %}
-                    <div class="stat-item">
+                    <a href="?filtro=dc&valor={{ dc.nombre }}"
+                        class="stat-item clickable {% if request.GET.filtro == 'dc' and request.GET.valor == dc.nombre %}active{% endif %}">
                         <span class="stat-name">{{ dc.nombre }}</span>
                         <span class="stat-value">{{ dc.total }}</span>
-                    </div>
+                    </a>
                     {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Últimos Tickets -->
+    <!-- Tabla de Tickets Filtrable -->
     <div class="card">
         <div class="card-header">
-            <h3>Últimos Tickets</h3>
-            <a href="{% url 'ticket_list' %}" class="btn btn-sm">Ver todos</a>
+            <h3>
+                {% if request.GET.filtro == 'pendiente' %}Tickets Pendientes
+                {% elif request.GET.filtro == 'proceso' %}Tickets En Proceso
+                {% elif request.GET.filtro == 'cerrado' %}Tickets Cerrados
+                {% elif request.GET.filtro == 'critico' %}Tickets Críticos
+                {% elif request.GET.filtro == 'alta' %}Tickets Prioridad Alta
+                {% elif request.GET.filtro == 'categoria' %}{{ request.GET.valor }}
+                {% elif request.GET.filtro == 'dc' %}DC: {{ request.GET.valor }}
+                {% else %}Todos los Tickets{% endif %}
+                ({{ tickets_filtrados|length }})
+            </h3>
+            <div class="header-actions">
+                <input type="text" id="searchInput" class="form-input search-input" placeholder="🔍 Buscar en tabla..."
+                    style="width: 200px;">
+                <a href="{% url 'ticket_list' %}" class="btn btn-sm btn-ghost">Ver todos</a>
+            </div>
         </div>
-        <div class="card-body">
-            <table class="data-table">
+        <div class="card-body table-responsive">
+            <table class="data-table sortable" id="ticketsTable">
                 <thead>
                     <tr>
-                        <th>Código</th>
-                        <th>Título</th>
-                        <th>Estado</th>
-                        <th>Prioridad</th>
-                        <th>Data Center</th>
-                        <th>Fecha</th>
+                        <th data-sort="codigo" class="sortable-header">Código <span class="sort-icon">↕</span></th>
+                        <th data-sort="titulo" class="sortable-header">Título <span class="sort-icon">↕</span></th>
+                        <th data-sort="estado" class="sortable-header">Estado <span class="sort-icon">↕</span></th>
+                        <th data-sort="prioridad" class="sortable-header">Prioridad <span class="sort-icon">↕</span>
+                        </th>
+                        <th data-sort="dc" class="sortable-header">Data Center <span class="sort-icon">↕</span></th>
+                        <th data-sort="fecha" class="sortable-header">Fecha <span class="sort-icon">↕</span></th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for ticket in ultimos_tickets %}
+                    {% for ticket in tickets_filtrados %}
                     <tr>
                         <td><a href="{% url 'ticket_detail' ticket.pk %}" class="link">{{ ticket.codigo }}</a></td>
                         <td class="truncate">{{ ticket.titulo|truncatechars:50 }}</td>
                         <td><span class="badge badge-estado">{{ ticket.estado.nombre }}</span></td>
                         <td><span class="badge {{ ticket.prioridad_badge }}">{{ ticket.prioridad }}</span></td>
                         <td>{{ ticket.dc.nombre|default:"-" }}</td>
-                        <td>{{ ticket.fecha_inicio|date:"d/m/Y" }}</td>
+                        <td data-date="{{ ticket.fecha_inicio|date:'Y-m-d' }}">{{ ticket.fecha_inicio|date:"d/m/Y" }}
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center">No hay tickets registrados</td>
+                        <td colspan="6" class="text-center">No hay tickets con este filtro</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+
+            <!-- Paginación -->
+            {% if tickets_filtrados|length > 10 %}
+            <div class="table-pagination" id="tablePagination">
+                <span class="page-info">Mostrando <span id="showingStart">1</span>-<span id="showingEnd">10</span> de
+                    <span id="totalRows">{{ tickets_filtrados|length }}</span></span>
+                <div class="pagination-buttons">
+                    <button class="btn btn-sm btn-ghost" id="prevPage" disabled>« Anterior</button>
+                    <button class="btn btn-sm btn-ghost" id="nextPage">Siguiente »</button>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<style>
+    /* KPI Cards clickeables */
+    .kpi-card {
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .kpi-card.active {
+        border: 2px solid var(--accent-primary);
+        box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-3px);
+    }
+
+    /* Alert cards clickeables */
+    .alert-card {
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .alert-card.active {
+        box-shadow: 0 0 15px rgba(220, 53, 69, 0.5);
+    }
+
+    /* Tabla sorteable */
+    .sortable-header {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .sortable-header:hover {
+        background: var(--bg-hover);
+    }
+
+    .sort-icon {
+        opacity: 0.5;
+        font-size: 0.8rem;
+        margin-left: 0.25rem;
+    }
+
+    .sortable-header.asc .sort-icon::after {
+        content: '↑';
+    }
+
+    .sortable-header.desc .sort-icon::after {
+        content: '↓';
+    }
+
+    /* Paginación de tabla */
+    .table-pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-top: 1px solid var(--border-color);
+        margin-top: 1rem;
+    }
+
+    .pagination-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const table = document.getElementById('ticketsTable');
+        if (!table) return;
+
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const headers = table.querySelectorAll('.sortable-header');
+
+        // Ordenación por columnas
+        headers.forEach((header, index) => {
+            header.addEventListener('click', function () {
+                const isAsc = this.classList.contains('asc');
+                headers.forEach(h => h.classList.remove('asc', 'desc'));
+                this.classList.add(isAsc ? 'desc' : 'asc');
+
+                rows.sort((a, b) => {
+                    const aVal = a.cells[index].textContent.trim();
+                    const bVal = b.cells[index].textContent.trim();
+
+                    // Detectar fechas
+                    if (a.cells[index].dataset.date) {
+                        return isAsc
+                            ? b.cells[index].dataset.date.localeCompare(a.cells[index].dataset.date)
+                            : a.cells[index].dataset.date.localeCompare(b.cells[index].dataset.date);
+                    }
+
+                    return isAsc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+                });
+
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+
+        // Paginación
+        const rowsPerPage = 10;
+        let currentPage = 1;
+        const totalRows = rows.length;
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+        function showPage(page) {
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            rows.forEach((row, index) => {
+                row.style.display = (index >= start && index < end) ? '' : 'none';
+            });
+
+            const showingStart = document.getElementById('showingStart');
+            const showingEnd = document.getElementById('showingEnd');
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+
+            if (showingStart) showingStart.textContent = start + 1;
+            if (showingEnd) showingEnd.textContent = Math.min(end, totalRows);
+            if (prevBtn) prevBtn.disabled = page === 1;
+            if (nextBtn) nextBtn.disabled = page === totalPages;
+        }
+
+        const prevBtn = document.getElementById('prevPage');
+        const nextBtn = document.getElementById('nextPage');
+
+        if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) showPage(--currentPage); });
+        if (nextBtn) nextBtn.addEventListener('click', () => { if (currentPage < totalPages) showPage(++currentPage); });
+
+        if (totalRows > rowsPerPage) showPage(1);
+
+        // Búsqueda en tabla
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const searchTerm = this.value.toLowerCase();
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const matches = text.includes(searchTerm);
+                    row.style.display = matches ? '' : 'none';
+                    if (matches) visibleCount++;
+                });
+
+                // Actualizar contador
+                const showingEnd = document.getElementById('showingEnd');
+                if (showingEnd) showingEnd.textContent = visibleCount;
+            });
+        }
+    });
+</script>
+
+<style>
+    /* Elementos clickeables */
+    .stat-item.clickable {
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        transition: var(--transition);
+    }
+
+    .stat-item.clickable:hover {
+        background: var(--accent-primary);
+        transform: scale(1.02);
+    }
+
+    .stat-item.clickable.active {
+        background: var(--accent-primary);
+        border-left: 3px solid #fff;
+    }
+
+    /* Header actions */
+    .header-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+</style>
 {% endblock %}
